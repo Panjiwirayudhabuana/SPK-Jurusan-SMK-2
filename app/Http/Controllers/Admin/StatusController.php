@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\{Siswa, GuruBk};
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 
 class StatusController extends Controller
@@ -19,6 +20,7 @@ class StatusController extends Controller
         $siswa = Siswa::with('user')->findOrFail($id);
         $siswa->user->update(['is_active' => !$siswa->user->is_active]);
         $status = $siswa->user->is_active ? 'diaktifkan' : 'dinonaktifkan';
+        ActivityLogger::log("Admin {$status} siswa: {$siswa->user->nama}");
         return redirect()->back()->with('success', "Akun siswa {$siswa->user->nama} berhasil {$status}.");
     }
 
@@ -27,6 +29,7 @@ class StatusController extends Controller
         $guru = GuruBk::with('user')->findOrFail($id);
         $guru->user->update(['is_active' => !$guru->user->is_active]);
         $status = $guru->user->is_active ? 'diaktifkan' : 'dinonaktifkan';
+        ActivityLogger::log("Admin {$status} Guru BK: {$guru->user->nama}");
         return redirect()->back()->with('success', "Akun Guru BK {$guru->user->nama} berhasil {$status}.");
     }
 }

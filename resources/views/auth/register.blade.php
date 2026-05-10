@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Daftar · SPK Jurusan SMKN 2 Jember</title>
+<link rel="icon" href="{{ asset('Assets/Logo_SMKN2Jember.png') }}" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,10 +35,10 @@ body::before {
 .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 48px; animation: fadeUp .6s ease both; }
 .brand-logo {
     width: 44px; height: 44px;
-    background: linear-gradient(135deg, var(--blue), var(--gold));
-    border-radius: 11px; display: flex; align-items: center; justify-content: center;
-    font-family: 'Playfair Display', serif; font-weight: 800; font-size: 15px; color: #fff;
-    box-shadow: 0 4px 14px rgba(37,99,235,.4); flex-shrink: 0;
+    background: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    padding: 6px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.15); flex-shrink: 0;
 }
 .brand-text .name { font-family: 'Playfair Display', serif; font-weight: 800; font-size: 12.5px; color: var(--white); line-height: 1.3; }
 .brand-text .sub { font-size: 10.5px; color: var(--gray); }
@@ -157,7 +158,9 @@ textarea { resize: vertical; min-height: 80px; }
     <div class="deco deco-2"></div>
 
     <div class="brand">
-        <div class="brand-logo">S2J</div>
+        <div class="brand-logo">
+            <img src="{{ asset('Assets/Logo_SMKN2Jember.png') }}" alt="Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
         <div class="brand-text">
             <div class="name">SMK NEGERI 2 JEMBER</div>
             <div class="sub">Sistem Pendukung Keputusan Pemilihan Jurusan</div>

@@ -14,7 +14,7 @@ return new class extends Migration
        Schema::create('password_resets', function (Blueprint $table) {
         $table->id();
         $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-        $table->string('otp_code', 6);
+        $table->string('otp_code', 255);
         $table->dateTime('expires_at');
         $table->boolean('is_used')->default(false);
         $table->timestamps();

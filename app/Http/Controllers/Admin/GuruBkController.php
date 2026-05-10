@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\GuruBk;
 use App\Models\Jurusan;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -52,6 +53,8 @@ class GuruBkController extends Controller
             'jurusan_id' => $request->jurusan_id,
         ]);
 
+        ActivityLogger::log('Admin tambah Guru BK: ' . $request->nama);
+
         return redirect()->route('admin.gurubk.index')
                          ->with('success', "Akun Guru BK {$request->nama} berhasil dibuat! Password default: password123");
     }
@@ -92,6 +95,8 @@ class GuruBkController extends Controller
             'jurusan_id' => $request->jurusan_id,
         ]);
 
+        ActivityLogger::log('Admin edit Guru BK: ' . $request->nama);
+
         return redirect()->route('admin.gurubk.index')
                          ->with('success', "Data Guru BK {$request->nama} berhasil diperbarui!");
     }
@@ -101,6 +106,7 @@ class GuruBkController extends Controller
         $guruBk = GuruBk::with('user')->findOrFail($id);
         $guruBk->user->update(['is_active' => !$guruBk->user->is_active]);
         $status = $guruBk->user->is_active ? 'diaktifkan' : 'dinonaktifkan';
+        ActivityLogger::log("Admin {$status} Guru BK: {$guruBk->user->nama}");
         return redirect()->back()->with('success', "Akun Guru BK berhasil {$status}.");
     }
 }

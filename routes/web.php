@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\JurusanAdminController         as AdminJurusan;
 use App\Http\Controllers\Admin\ArtikelAdminController         as AdminArtikel;
 use App\Http\Controllers\Admin\InfoJurusanAdminController     as AdminInfoJurusan;
 use App\Http\Controllers\Admin\MonitoringController           as AdminMonitoring;
+use App\Http\Controllers\Admin\PenyakitController             as AdminPenyakit;
 
 use App\Http\Controllers\Bk\DashboardController;
 use App\Http\Controllers\Bk\SiswaController                   as BkSiswaController;
@@ -30,7 +31,7 @@ use App\Http\Controllers\Bk\InfoJurusanController;
 use App\Http\Controllers\Bk\ProfilController                  as BkProfilController;
 use App\Http\Controllers\Bk\PasswordController                as BkPasswordController;
 use App\Http\Controllers\Auth\OtpRegisterController;
-
+use App\Http\Controllers\Auth\OtpController;
 /*
 |--------------------------------------------------------------------------
 | Route utilitas
@@ -96,6 +97,17 @@ require __DIR__ . '/auth.php';
 
 /*
 |--------------------------------------------------------------------------
+| OTP Global (Login Verification)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('guest')->group(function () {
+    Route::get('/login/otp', [OtpController::class, 'showForm'])->name('otp.form');
+    Route::post('/login/otp/resend', [OtpController::class, 'resend'])->name('otp.resend');
+    Route::post('/login/otp/verify', [OtpController::class, 'verify'])->name('otp.verify');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Admin
 |--------------------------------------------------------------------------
 */
@@ -130,6 +142,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/jurusan/{id}/edit',     [AdminJurusan::class, 'edit'])->name('jurusan.edit');
     Route::put('/jurusan/{id}',          [AdminJurusan::class, 'update'])->name('jurusan.update');
     Route::patch('/jurusan/{id}/status', [AdminJurusan::class, 'toggleStatus'])->name('jurusan.status');
+
+    // Master penyakit untuk aturan jurusan
+    Route::get('/penyakit',                [AdminPenyakit::class, 'index'])->name('penyakit.index');
+    Route::post('/penyakit',               [AdminPenyakit::class, 'store'])->name('penyakit.store');
+    Route::put('/penyakit/{id}',           [AdminPenyakit::class, 'update'])->name('penyakit.update');
+    Route::patch('/penyakit/{id}/status',  [AdminPenyakit::class, 'toggleStatus'])->name('penyakit.status');
 
     // FR-A-09: Kelola Artikel
     Route::get('/artikel',            [AdminArtikel::class, 'index'])->name('artikel.index');

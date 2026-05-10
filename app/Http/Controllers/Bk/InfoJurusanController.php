@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Bk;
 
 use App\Http\Controllers\Controller;
 use App\Models\{InformasiJurusan, ProspekKerja, Jurusan};
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -101,6 +102,8 @@ class InfoJurusanController extends Controller
                 'isi' => $isi
             ]);
         }
+
+    ActivityLogger::log('Guru BK edit info jurusan: ' . $jurusan->nama_jurusan);
 
     return redirect()->route('bk.infojurusan.show', $jurusanId)
         ->with('success', "Informasi jurusan berhasil diperbarui!");

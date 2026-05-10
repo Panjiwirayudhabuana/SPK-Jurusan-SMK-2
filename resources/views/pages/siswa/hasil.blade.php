@@ -343,6 +343,10 @@
                     </div>
                 </div>
                 <div class="info-item">
+                    <div class="info-item-label">Penyakit</div>
+                    <div class="info-item-value">{{ $tesTerakhir->penyakit?->nama_penyakit ?? 'Tidak ada' }}</div>
+                </div>
+                <div class="info-item">
                     <div class="info-item-label">Skor Minat Bakat</div>
                     <div class="info-item-value" style="color:var(--accent)">
                         {{ $tesTerakhir->skor_minat_bakat }}%

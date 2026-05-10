@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -61,6 +62,8 @@ class ProfileController extends Controller
             'sekolah_asal' => $request->sekolah_asal,
         ]);
 
+        ActivityLogger::log('Siswa edit profil: ' . $user->nama);
+
         return redirect()->route('siswa.profile')
                         ->with('success', 'Profil berhasil diperbarui!');
     }
@@ -87,6 +90,8 @@ class ProfileController extends Controller
         $user->update([
             'password_hash' => Hash::make($request->password),
         ]);
+
+        ActivityLogger::log('Siswa ubah password');
 
         return redirect()->route('siswa.profile')
                          ->with('success', 'Password berhasil diubah!');

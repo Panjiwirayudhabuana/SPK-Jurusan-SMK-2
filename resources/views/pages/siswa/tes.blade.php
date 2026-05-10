@@ -328,6 +328,19 @@
                             </div>
                             <input type="hidden" name="buta_warna" id="buta_warna" value="{{ old('buta_warna') }}" />
                         </div>
+
+                        <div class="field" style="margin-top:16px">
+                            <label>Riwayat Penyakit</label>
+                            <select name="penyakit_id" id="penyakit_id">
+                                <option value="">Tidak ada / Tidak ada di pilihan</option>
+                                @foreach($penyakits as $penyakit)
+                                    <option value="{{ $penyakit->id }}" {{ old('penyakit_id') == $penyakit->id ? 'selected' : '' }}>
+                                        {{ $penyakit->nama_penyakit }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="field-hint">Pilih jika kamu memiliki salah satu riwayat penyakit pada daftar.</div>
+                        </div>
                     </div>
                 </div>
                 <div class="btn-nav">
@@ -454,6 +467,7 @@
                                 <div class="review-item"><div class="review-item-label">Berat Badan</div><div class="review-item-value" id="rev-berat">—</div></div>
                                 <div class="review-item"><div class="review-item-label">BMI</div><div class="review-item-value" id="rev-bmi">—</div></div>
                                 <div class="review-item"><div class="review-item-label">Buta Warna</div><div class="review-item-value" id="rev-buta">—</div></div>
+                                <div class="review-item"><div class="review-item-label">Penyakit</div><div class="review-item-value" id="rev-penyakit">—</div></div>
                             </div>
                         </div>
 
@@ -755,6 +769,8 @@
         s('rev-bmi', bmi ? `${bmi.nilai} (${bmi.kategori})` : '—');
 
         const butaWarna = document.getElementById('buta_warna')?.value || '';
+        const penyakit = document.getElementById('penyakit_id');
+        s('rev-penyakit', penyakit && penyakit.value ? (penyakit.options[penyakit.selectedIndex]?.text || 'Tidak ada') : 'Tidak ada');
         s('rev-buta', butaWarna === 'ya' ? 'Ya, Buta Warna' : (butaWarna === 'tidak' ? 'Tidak' : '—'));
 
         s('rev-mtk', document.querySelector('[name="nilai_matematika"]')?.value || '—');
@@ -813,6 +829,7 @@
                 tinggi: @json(old('tinggi_badan')),
                 berat: @json(old('berat_badan')),
                 buta: @json(old('buta_warna')),
+                penyakit: @json(old('penyakit_id')),
                 mtk: @json(old('nilai_matematika')),
                 bind: @json(old('nilai_bahasa_indonesia')),
                 bing: @json(old('nilai_bahasa_inggris')),
@@ -822,7 +839,7 @@
             if (oldInputs.mtk || oldInputs.bind || oldInputs.bing || oldInputs.ipa) {
                 currentStep = 2;
             }
-            if (oldInputs.tinggi || oldInputs.berat || oldInputs.buta) {
+            if (oldInputs.tinggi || oldInputs.berat || oldInputs.buta || oldInputs.penyakit) {
                 currentStep = 1;
             }
             if (oldInputs.jurusan1 || oldInputs.jurusan2) {

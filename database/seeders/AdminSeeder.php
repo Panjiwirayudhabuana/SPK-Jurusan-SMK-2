@@ -37,7 +37,7 @@ class AdminSeeder extends Seeder
             }
 
             // Kredensial default admin (ubah sesuai kebutuhan Anda)
-            $email = 'admin@gmail.com';
+            $email = 'spkadmin23@gmail.com';
             $plainPassword = 'Admin12345';
 
             // Buat/ambil user admin (email unik)

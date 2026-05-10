@@ -13,6 +13,10 @@ class TesPdf extends Model
 
     protected $fillable = ['tes_id', 'upload_id', 'generated_at'];
 
+    protected $casts = [
+        'generated_at' => 'datetime',
+    ];
+
     public function upload()
     {
         return $this->belongsTo(Upload::class, 'upload_id');

@@ -19,12 +19,14 @@ return new class extends Migration
                 ->constrained('kriteria')
                 ->cascadeOnDelete();
 
-            // Bobot tiap kriteria untuk jurusan tertentu
-            // contoh: 0.1500, 0.1000, 0.2500, dst
             $table->decimal('bobot', 5, 4);
+
+            $table->boolean('wajib_lolos')->default(false);
+            $table->decimal('nilai_min', 8, 2)->nullable();
+            $table->decimal('nilai_max', 8, 2)->nullable();
+
             $table->timestamps();
 
-            // Satu jurusan hanya boleh punya satu bobot untuk satu kriteria
             $table->unique(['jurusan_id', 'kriteria_id']);
         });
     }

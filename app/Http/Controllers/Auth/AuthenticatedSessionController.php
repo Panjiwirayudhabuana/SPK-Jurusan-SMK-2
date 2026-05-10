@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\OtpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,8 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
+    public function __construct(private OtpService $otpService) {}
+
     public function create(): View
     {
         return view('auth.login');
@@ -20,47 +23,47 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-        $request->session()->regenerate();
 
         $user = Auth::user();
 
+        // Logout sementara, login penuh hanya setelah OTP
+        Auth::guard('web')->logout();
+
         if (!$user) {
-            Auth::guard('web')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
             return redirect()->route('login');
         }
 
-        // Cek apakah akun aktif
+        // Cek akun aktif
         if (!(int) $user->is_active) {
-            Auth::guard('web')->logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
             return redirect()->route('login')
                 ->withErrors(['email' => 'Akun tidak aktif. Hubungi admin.']);
         }
 
-        $roleName = DB::table('roles')
+        // Ambil role
+        $roleName = strtolower(trim((string) DB::table('roles')
             ->where('id', $user->role_id)
-            ->value('nama_role');
+            ->value('nama_role')));
 
-        $roleName = strtolower(trim((string) $roleName));
+        // Semua role wajib OTP
+        $code = $this->otpService->generate($user);
+        $sent = $this->otpService->sendEmail($user, $code);
 
-        if ($roleName === 'admin') {
-            return redirect()->route('admin.dashboard');
+        if (!$sent) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Gagal mengirim kode OTP. Periksa koneksi internet atau email Anda dan coba lagi.']);
         }
 
-        if ($roleName === 'guru_bk') {
-            return redirect()->route('bk.dashboard');
-        }
+        session([
+            'otp_user_id' => $user->id,
+            'otp_role'    => $roleName,
+        ]);
 
-        return redirect()->route('landingpage');
+        return redirect()->route('otp.form');
     }
 
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

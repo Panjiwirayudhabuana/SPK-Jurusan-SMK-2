@@ -15,11 +15,15 @@ class HasilSaw extends Model
         'peringkat'
     ];
 
+    protected $casts = [
+        'nilai_preferensi' => 'decimal:6',
+        'peringkat'        => 'integer',
+    ];
+
     public function tes()
     {
         return $this->belongsTo(Tes::class, 'tes_id');
     }
-
 
     public function jurusan()
     {

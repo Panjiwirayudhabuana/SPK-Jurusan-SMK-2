@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -54,6 +55,8 @@ class SiswaAdminController extends Controller
             'sekolah_asal' => $request->sekolah_asal,
         ]);
 
+        ActivityLogger::log('Admin edit siswa: ' . $request->nama);
+
         return redirect()->route('admin.siswa.index')
                          ->with('success', "Data siswa {$request->nama} berhasil diperbarui!");
     }
@@ -63,6 +66,7 @@ class SiswaAdminController extends Controller
         $siswa = Siswa::with('user')->findOrFail($id);
         $siswa->user->update(['is_active' => !$siswa->user->is_active]);
         $status = $siswa->user->is_active ? 'diaktifkan' : 'dinonaktifkan';
+        ActivityLogger::log("Admin {$status} siswa: {$siswa->user->nama}");
         return redirect()->back()->with('success', "Akun siswa berhasil {$status}.");
     }
 }

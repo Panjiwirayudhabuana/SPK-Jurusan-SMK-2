@@ -3,19 +3,103 @@
 @section('page-title','Info Jurusan')
 @section('page-sub','FR-BK-08/09 · Kelola fasilitas & prospek kerja jurusan kamu')
 
+@push('styles')
+<style>
+/* ── HEADER JURUSAN RESPONSIVE ── */
+.jurusan-header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.jurusan-header-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.jurusan-header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.jurusan-header-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: rgba(255,255,255,.6);
+    margin-bottom: 4px;
+}
+
+.jurusan-header-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    word-break: break-word;
+}
+
+.jurusan-header-badge {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid rgba(255,255,255,.2);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+    .jurusan-header {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .jurusan-header-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+
+    .jurusan-header-name {
+        font-size: 15px;
+    }
+
+    .jurusan-header-badge {
+        /* Di mobile, badge pindah ke baris baru dan rata kiri */
+        width: 100%;
+        text-align: center;
+        order: 3;
+    }
+}
+</style>
+@endpush
+
 @section('content')
 
 {{-- HEADER JURUSAN --}}
-<div style="background:linear-gradient(135deg,var(--primary-dark),var(--primary));border-radius:14px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;">
-    <div style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🏫</div>
-    <div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.6);margin-bottom:4px;">Jurusan yang Kamu Kelola</div>
-        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;">{{ $jurusan->nama_jurusan }}</div>
+<div class="jurusan-header">
+    <div class="jurusan-header-icon">🏫</div>
+    <div class="jurusan-header-info">
+        <div class="jurusan-header-label">Jurusan yang Kamu Kelola</div>
+        <div class="jurusan-header-name">{{ $jurusan->nama_jurusan }}</div>
     </div>
-    <div style="margin-left:auto;">
-        <span style="background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;padding:5px 12px;border-radius:100px;border:1px solid rgba(255,255,255,.2);">
-            ✏️ Mode Edit
-        </span>
+    <div>
+        <span class="jurusan-header-badge">✏️ Mode Edit</span>
     </div>
 </div>
 
@@ -58,21 +142,21 @@
             <div style="display:flex;gap:8px;margin-bottom:8px;">
                 <input name="prospek_umum[]" value="{{ $p }}"
                     placeholder="Contoh: Network Engineer..."
-                    style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;"
+                    style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;min-width:0;"
                     onfocus="this.style.borderColor='#2563eb';this.style.background='#fff'"
                     onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
                 <button type="button" onclick="this.closest('div').remove()"
-                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;">✕</button>
+                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
             </div>
             @empty
             <div style="display:flex;gap:8px;margin-bottom:8px;">
                 <input name="prospek_umum[]"
                     placeholder="Contoh: Network Engineer..."
-                    style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;"
+                    style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;min-width:0;"
                     onfocus="this.style.borderColor='#2563eb';this.style.background='#fff'"
                     onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
                 <button type="button" onclick="this.closest('div').remove()"
-                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;">✕</button>
+                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
             </div>
             @endforelse
         </div>
@@ -96,21 +180,21 @@
             <div style="display:flex;gap:8px;margin-bottom:8px;">
                 <input name="prospek_alumni[]" value="{{ $p }}"
                     placeholder="Contoh: Bekerja di PT Telkom..."
-                    style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;"
+                    style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;min-width:0;"
                     onfocus="this.style.borderColor='#2563eb';this.style.background='#fff'"
                     onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
                 <button type="button" onclick="this.closest('div').remove()"
-                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;">✕</button>
+                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
             </div>
             @empty
             <div style="display:flex;gap:8px;margin-bottom:8px;">
                 <input name="prospek_alumni[]"
                     placeholder="Contoh: Bekerja di PT Telkom..."
-                    style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;"
+                    style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;min-width:0;"
                     onfocus="this.style.borderColor='#2563eb';this.style.background='#fff'"
                     onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
                 <button type="button" onclick="this.closest('div').remove()"
-                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;">✕</button>
+                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
             </div>
             @endforelse
         </div>
@@ -140,11 +224,11 @@ function addRow(containerId, inputName, placeholder) {
     div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;';
     div.innerHTML = `
         <input name="${inputName}[]" placeholder="${placeholder}"
-            style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;"
+            style="flex:1;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;padding:9px 13px;outline:none;min-width:0;"
             onfocus="this.style.borderColor='#2563eb';this.style.background='#fff'"
             onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
         <button type="button" onclick="this.closest('div').remove()"
-            style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;">✕</button>
+            style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:9px;padding:8px 12px;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
     `;
     wrap.appendChild(div);
 }

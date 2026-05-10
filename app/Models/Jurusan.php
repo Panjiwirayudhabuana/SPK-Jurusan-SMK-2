@@ -13,6 +13,9 @@ class Jurusan extends Model
         'is_active',
     ];
 
+    protected $casts = [
+    'is_active' => 'boolean',
+    ];
     public function guruBk()
     {
         return $this->hasMany(GuruBk::class);
@@ -21,6 +24,12 @@ class Jurusan extends Model
     public function jurusanKriteria()
     {
         return $this->hasMany(JurusanKriteria::class);
+    }
+
+    public function penyakit()
+    {
+        return $this->belongsToMany(Penyakit::class, 'jurusan_penyakit')
+            ->withTimestamps();
     }
 
     public function informasiJurusan()

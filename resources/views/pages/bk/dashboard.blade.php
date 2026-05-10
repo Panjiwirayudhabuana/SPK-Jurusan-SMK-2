@@ -228,6 +228,15 @@
         grid-template-columns:1fr;
     }
 }
+@media (max-width: 900px){
+    .dashboard-grid{
+        grid-template-columns:1fr !important;
+    }
+}
+
+canvas{
+    max-width:100% !important;
+}
 </style>
 @endpush
 
@@ -236,12 +245,26 @@
     $bulanLabel = $trenTes->map(fn($t) => \Carbon\Carbon::create($t->tahun, $t->bulan)->translatedFormat('M'));
     $bulanData  = $trenTes->pluck('total');
     $maxRekap   = $rekapJurusan->max('total') ?: 1;
+
+    $jurusanIkon = [
+        'Alat Berat'   => '🚜', 'Otomotif'    => '🚗', 'Motor'       => '🏍️',
+        'Pemesinan'    => '🔧', 'Mekatronika' => '🤖', 'Konstruksi'  => '🏗️',
+        'Bangunan'     => '🏗️', 'Listrik'     => '⚡', 'Pembangkit'  => '🔋',
+        'Audio'        => '📺', 'Komputer'    => '💻', 'Desain'      => '🎨',
+    ];
 @endphp
 
 <div class="dashboard-hero">
-    <div class="hero-badge">👩‍🏫 Guru Bimbingan Konseling</div>
-    <div class="hero-title">Selamat Datang, {{ Auth::user()->nama }}!</div>
-    <div class="hero-subtitle">Pantau perkembangan siswa dan kelola konten jurusan dari sini.</div>
+    <div style="display:flex; align-items:center; gap:20px;">
+        <div style="width:60px; height:60px; background:#fff; border-radius:50%; padding:8px; flex-shrink:0; box-shadow:0 8px 24px rgba(0,0,0,.15);">
+            <img src="{{ asset('Assets/Logo_SMKN2Jember.png') }}" alt="Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        <div>
+            <div class="hero-badge">👩‍🏫 Guru Bimbingan Konseling</div>
+            <div class="hero-title">Selamat Datang, {{ Auth::user()->nama }}!</div>
+            <div class="hero-subtitle">Pantau perkembangan siswa dan kelola konten jurusan dari sini.</div>
+        </div>
+    </div>
 </div>
 
 <div class="stats-grid">
@@ -265,77 +288,91 @@
         <div class="panel-body">
             <div class="panel-title">📈 Tren Tes Siswa</div>
             <div class="panel-subtitle">7 bulan terakhir</div>
-            <canvas id="trendChart"></canvas>
+            <div style="position:relative;height:250px;">
+                <canvas id="trendChart"></canvas>
+            </div>
         </div>
     </div>
 
     <div class="panel-card">
         <div class="panel-body">
-            <div class="panel-title" style="margin-bottom:14px;">🏆 Rekap Peminat Jurusan</div>
-            <div class="rekap-list">
-                @foreach($rekapJurusan as $r)
-                <div>
-                    <div class="rekap-item-title">
-                        <span>{{ $r->jurusan->nama ?? '?' }}</span>
-                        <span style="color:var(--text-mid);">{{ $r->total }}</span>
-                    </div>
-                    <div class="rekap-track">
-                        <div class="rekap-bar" style="width:{{ round($r->total/$maxRekap*100) }}%;"></div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
+            <div class="panel-title" style="margin-bottom:6px;">🏆 Statistik Jurusan</div>
+            <div class="panel-subtitle">Lihat rekap lengkap peminat & kesesuaian minat</div>
+            <a href="{{ route('bk.statistik') }}" 
+               style="display:flex;align-items:center;justify-content:space-between;
+                      background:var(--bg);border:1px solid var(--border);
+                      border-radius:var(--radius);padding:14px 16px;
+                      text-decoration:none;color:var(--primary-dark);
+                      font-weight:700;font-size:13px;margin-top:12px;
+                      transition:all var(--transition-normal);"
+               onmouseover="this.style.background='var(--primary)';this.style.color='#fff'"
+               onmouseout="this.style.background='var(--bg)';this.style.color='var(--primary-dark)'">
+                <span>📊 Buka Halaman Statistik Jurusan</span>
+                <span>→</span>
+            </a>
         </div>
     </div>
-</div>
+</div>{{-- ✅ tutup dashboard-grid --}}
 
 <div class="card">
     <div class="card-head">
         <div class="card-title">📋 Tes Terbaru</div>
         <a href="{{ route('bk.siswa.index') }}" class="btn btn-outline btn-sm">Lihat Semua →</a>
     </div>
-    <table>
-        <thead>
-            <tr>
-                <th>Nama Siswa</th>
-                <th>Sekolah Asal</th>
-                <th>Rekomendasi</th>
-                <th>Minat Awal</th>
-                <th>Sesuai?</th>
-                <th>Tanggal</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($tesTerbaru as $tes)
-            @php
-                $rek    = $tes->rekomendasiTeratas?->jurusan?->nama ?? '-';
-                $minat1 = $tes->minatJurusan1?->nama ?? '-';
-                $sesuai = $tes->rekomendasiTeratas && $tes->rekomendasiTeratas->jurusan_id === $tes->minat_jurusan_1_id;
-            @endphp
-            <tr>
-                <td style="font-weight:700;color:var(--primary-dark);">{{ $tes->siswa->user->nama ?? '-' }}</td>
-                <td style="font-size:11.5px;color:var(--text-dim);">{{ $tes->siswa->sekolah_asal ?? '-' }}</td>
-                <td><span class="badge badge-blue">{{ $rek }}</span></td>
-                <td><span class="badge badge-gray">{{ $minat1 }}</span></td>
-                <td>
-                    @if($tes->rekomendasiTeratas)
-                        <span class="badge {{ $sesuai ? 'badge-green':'badge-red' }}">
-                            {{ $sesuai ? '✅ Sesuai':'⚠ Berbeda' }}
-                        </span>
-                    @else
-                        —
-                    @endif
-                </td>
-                <td style="font-size:11.5px;color:var(--text-dim);">{{ $tes->created_at->translatedFormat('d M Y') }}</td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="6" class="table-empty">Belum ada data tes.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Siswa</th>
+                    <th>Sekolah Asal</th>
+                    <th>Rekomendasi</th>
+                    <th>Minat Awal</th>
+                    <th>Sesuai?</th>
+                    <th>Tanggal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($tesTerbaru as $tes)
+                @php
+                    $rek    = $tes->rekomendasiTeratas?->jurusan?->nama_jurusan ?? '-';
+                    $minat1 = $tes->minatJurusan1?->nama_jurusan ?? '-';
+                    $sesuai = $tes->rekomendasiTeratas && $tes->rekomendasiTeratas->jurusan_id === $tes->minat_jurusan_1_id;
+
+                    $iconRek = '🏫';
+                    foreach($jurusanIkon as $kw => $ic) {
+                        if(str_contains(strtolower($rek), strtolower($kw))) { $iconRek = $ic; break; }
+                    }
+                    $iconMinat = '🏫';
+                    foreach($jurusanIkon as $kw => $ic) {
+                        if(str_contains(strtolower($minat1), strtolower($kw))) { $iconMinat = $ic; break; }
+                    }
+                @endphp
+                <tr>
+                    <td style="font-weight:700;color:var(--primary-dark); white-space: nowrap;">{{ $tes->siswa->user->nama ?? '-' }}</td>
+                    <td style="font-size:11.5px;color:var(--text-dim); white-space: nowrap;">{{ $tes->siswa->sekolah_asal ?? '-' }}</td>
+                    <td style="white-space: nowrap;"><span class="badge badge-blue" style="font-size: 10px; padding: 3px 8px;">{{ $iconRek }} {{ $rek }}</span></td>
+                    <td style="white-space: nowrap;"><span class="badge badge-gray" style="font-size: 10px; padding: 3px 8px;">{{ $iconMinat }} {{ $minat1 }}</span></td>
+                    <td style="white-space: nowrap;">
+                        @if($tes->rekomendasiTeratas)
+                            <span class="badge {{ $sesuai ? 'badge-green':'badge-red' }}" style="font-size: 10px; padding: 3px 8px;">
+                                {{ $sesuai ? '✅ Sesuai':'⚠ Beda' }}
+                            </span>
+                        @else
+                            —
+                        @endif
+                    </td>
+                    <td style="font-size:11.5px;color:var(--text-dim); white-space: nowrap;">{{ $tes->created_at->translatedFormat('d M Y') }}</td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" class="table-empty">Belum ada data tes.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>{{-- ✅ FIX: penutup .card yang sebelumnya hilang --}}
+
 @endsection
 
 @push('scripts')
@@ -361,7 +398,7 @@ new Chart(document.getElementById('trendChart'), {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: true,
+        maintainAspectRatio: false,
         plugins: {
             legend: { display: false }
         },

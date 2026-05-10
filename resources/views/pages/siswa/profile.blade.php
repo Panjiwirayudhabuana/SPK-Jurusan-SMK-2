@@ -20,12 +20,12 @@ body { padding-top:0 !important; background:#0d0f14 !important; color:#e8eaf0 !i
 .bg-glow2 { position:fixed; bottom:-150px; right:-150px; width:500px; height:500px; background:radial-gradient(ellipse,rgba(224,123,84,.07) 0%,transparent 70%); pointer-events:none; z-index:0; }
 
 /* BACK BAR */
-.back-bar { position:sticky; top:0; z-index:100; background:rgba(13,15,20,.92); backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,.06); padding:10px 20px; display:flex; align-items:center; justify-content:space-between; }
-.back-btn-top { display:inline-flex; align-items:center; gap:7px; background:rgba(244,185,66,.1); border:1.5px solid rgba(244,185,66,.25); color:var(--accent); font-size:12px; font-weight:700; padding:7px 16px; border-radius:9px; text-decoration:none; transition:all .2s; }
-.back-btn-top:hover { background:rgba(244,185,66,.18); transform:translateX(-2px); }
-.back-bar-title { font-family:'Playfair Display',serif; font-size:13px; font-weight:700; color:rgba(255,255,255,.5); }
+.back-bar { position: relative; z-index: 100; background: rgba(13,15,20,.6); border-bottom: 1px solid rgba(255,255,255,.06); padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; }
+.back-btn-top { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #fff; font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 9px; text-decoration: none; transition: all .2s; }
+.back-btn-top:hover { background: rgba(255,255,255,.1); transform: translateX(-2px); }
+.back-bar-title { font-family: 'Playfair Display', serif; font-size: 13px; font-weight: 700; color: rgba(255,255,255,.5); }
 
-.pc { position:relative; z-index:1; max-width:820px; margin:0 auto; padding:36px 20px 80px; }
+.pc { position: relative; z-index: 1; max-width: 820px; margin: 0 auto; padding: 20px 20px 80px; }
 
 .pg-head  { text-align:center; margin-bottom:38px; animation:fadeDown .6s ease both; }
 .hd-badge { display:inline-flex; align-items:center; gap:7px; background:rgba(244,185,66,.11); border:1px solid rgba(244,185,66,.25); color:var(--accent); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:5px 16px; border-radius:100px; margin-bottom:14px; }

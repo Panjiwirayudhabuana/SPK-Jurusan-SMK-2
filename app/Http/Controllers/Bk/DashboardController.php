@@ -18,7 +18,7 @@ class DashboardController extends Controller
         })->distinct('siswa_id')->count('siswa_id');
 
         $trenTes = Tes::selectRaw('MONTH(created_at) as bulan, YEAR(created_at) as tahun, COUNT(*) as total')
-                      ->where('created_at', '>=', now()->subMonths(7))
+                      ->where('created_at', '>=', now()->subMonths(1))
                       ->groupByRaw('YEAR(created_at), MONTH(created_at)')
                       ->orderBy('tahun')->orderBy('bulan')->get();
 

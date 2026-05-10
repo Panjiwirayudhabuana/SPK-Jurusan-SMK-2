@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ArtikelJurusan;
 use App\Models\Jurusan;
 use App\Models\Upload;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -56,7 +57,7 @@ class ArtikelController extends Controller
             'file'      => 'nullable|mimes:pdf,mp4|max:51200',
         ]);
 
-        ArtikelJurusan::create([
+        $artikel = ArtikelJurusan::create([
             'jurusan_id'         => $guruBk->jurusan_id,
             'judul'              => $request->judul,
             'deskripsi'          => $request->deskripsi,
@@ -64,6 +65,8 @@ class ArtikelController extends Controller
             'file_upload_id'     => $this->simpanUpload($request, 'file', 'artikel/file'),
             'created_by_user_id' => Auth::id(),
         ]);
+
+        ActivityLogger::log('Guru BK tambah artikel: ' . $artikel->judul);
 
         return redirect()->route('bk.artikel.index')->with('success', 'Artikel berhasil ditambahkan!');
     }
@@ -132,12 +135,15 @@ class ArtikelController extends Controller
             }
         });
 
+        ActivityLogger::log('Guru BK edit artikel: ' . $artikel->judul);
+
         return redirect()->route('bk.artikel.index')->with('success', 'Artikel berhasil diperbarui!');
     }
 
     public function destroy($id)
     {
         $artikel = ArtikelJurusan::findOrFail($id);
+        $judul = $artikel->judul;
 
         DB::transaction(function () use ($artikel) {
             $gambarId = $artikel->gambar_upload_id;
@@ -153,6 +159,8 @@ class ArtikelController extends Controller
                 $this->hapusUpload($fileId);
             }
         });
+
+        ActivityLogger::log('Guru BK hapus artikel: ' . $judul);
 
         return redirect()->route('bk.artikel.index')->with('success', 'Artikel berhasil dihapus.');
     }

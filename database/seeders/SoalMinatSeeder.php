@@ -37,16 +37,16 @@ class SoalMinatSeeder extends Seeder
 
         // 10 soal yang kamu tulis di blade
         $soalList = [
-            'Saya suka memecahkan soal matematika atau logika.',
-            'Saya tertarik mempelajari bagaimana teknologi dan komputer bekerja.',
-            'Saya senang melakukan eksperimen atau percobaan ilmiah.',
-            'Saya mudah memahami konsep-konsep sains dan teknik.',
-            'Saya senang berbicara dan berinteraksi dengan banyak orang.',
+            'Saya senang memperbaiki atau merakit benda/alat.',
+            'Saya tertarik menggunakan komputer dan teknologi jaringan.',
+            'Saya suka menggambar atau membuat desain visual.',
+            'Saya lebih nyaman belajar praktik dibanding teori.',
+            'Saya tertarik pada mesin kendaraan atau otomotif.',
             'Saya tertarik membantu orang lain memecahkan masalah mereka.',
-            'Saya suka menggambar, melukis, atau membuat karya visual.',
-            'Saya tertarik pada dunia desain, musik, atau seni.',
-            'Saya suka berdagang atau merencanakan bisnis.',
-            'Saya senang bernegosiasi dan meyakinkan orang lain.',
+            'Saya tertarik dengan instalasi listrik atau elektronika.',
+            'Saya senang bekerja secara teliti dan detail.',
+            'Saya tertarik membuat karya kreatif digital seperti poster atau video.',
+            'Saya merasa memiliki minat yang kuat terhadap jurusan yang berhubungan dengan teknik',
         ];
 
         $inserted = 0;

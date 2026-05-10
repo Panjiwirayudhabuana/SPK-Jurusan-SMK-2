@@ -248,13 +248,13 @@
 
     {{-- HEADER --}}
     <div class="pdf-header">
-        <div class="pdf-logo">S2J</div>
+        <div class="pdf-logo"><img src="{{ public_path('Assets/Logo_SMKN2Jember.png') }}" alt="Logo" style="width:100%; height:100%; object-fit:contain;"></div>
         <div class="pdf-school">
             <div class="pdf-school-name">SMK Negeri 2 Jember</div>
             <div class="pdf-school-sub">Sistem Pendukung Keputusan Pemilihan Jurusan</div>
         </div>
         <div class="pdf-title-box">
-            <h2>Hasil Tes SPK</h2>
+            <h2>Hasil Tes Rekomendasi Jurusan</h2>
             <p>Metode Simple Additive Weighting (SAW)</p>
             <p>{{ now()->format('d F Y') }}</p>
         </div>
@@ -338,6 +338,10 @@
             <div class="info-item-value" style="color:{{ $tesTerakhir->buta_warna ? '#c0392b' : '#27ae60' }}">
                 {{ $tesTerakhir->buta_warna ? 'Ya' : 'Tidak' }}
             </div>
+        </div>
+        <div class="info-item">
+            <div class="info-item-label">Penyakit</div>
+            <div class="info-item-value">{{ $tesTerakhir->penyakit?->nama_penyakit ?? 'Tidak ada' }}</div>
         </div>
     </div>
 

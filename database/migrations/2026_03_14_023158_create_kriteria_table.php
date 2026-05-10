@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->string('kode_kriteria', 10)->unique(); // C1 s.d. C12
             $table->string('nama_kriteria', 100); // Matematika, Bahasa Indonesia, dst.
-            $table->enum('atribut', ['benefit', 'cost'])->default('benefit');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

@@ -99,6 +99,13 @@
 
 @php
     $isSiswa = auth()->check() && auth()->user()->role_id == 3;
+
+    $jurusanIkon = [
+        'Alat Berat'   => '🚜', 'Otomotif'    => '🚗', 'Motor'       => '🏍️',
+        'Pemesinan'    => '🔧', 'Mekatronika' => '🤖', 'Konstruksi'  => '🏗️',
+        'Bangunan'     => '🏗️', 'Listrik'     => '⚡', 'Pembangkit'  => '🔋',
+        'Audio'        => '📺', 'Komputer'    => '💻', 'Desain'      => '🎨',
+    ];
 @endphp
 
 {{-- HERO / CAROUSEL --}}
@@ -110,7 +117,7 @@
             <div class="max-w-7xl mx-auto px-6 py-14 md:py-20 flex flex-col md:flex-row items-center gap-10 relative z-10">
                 <div class="flex-1 text-white">
                     <div class="hero-badge inline-flex items-center gap-2 text-xs font-semibold text-amber-300 px-4 py-1.5 rounded-full mb-5">
-                        🎓 Tahun Ajaran 2025/2026
+                        🎓 Tahun Ajaran 2026/2027
                     </div>
 
                     <h1 class="text-3xl md:text-5xl font-extrabold leading-tight mb-4">
@@ -181,7 +188,7 @@
                 </div>
                 <h1 class="text-3xl md:text-5xl font-extrabold text-white leading-tight mb-4">
                     SMK Negeri 2 Jember<br>
-                    <span class="text-amber-300">TA 2026/2027</span>
+                    <span class="text-amber-300">Tahun Ajaran 2026/2027</span>
                 </h1>
                 <p class="text-blue-100 text-sm md:text-base mb-8 max-w-2xl mx-auto">
                     Cek jurusanmu sekarang dan gunakan fitur SPK untuk mendapatkan rekomendasi jurusan terbaik.
@@ -212,7 +219,7 @@
             @foreach([
                 ['1.200+', 'Siswa Aktif', '👨‍🎓'],
                 ['12', 'Program Keahlian', '📚'],
-                ['85+', 'Tenaga Pengajar', '👨‍🏫'],
+                ['125', 'Tenaga Pengajar', '👨‍🏫'],
                 ['95%', 'Tingkat Kelulusan', '🏆']
             ] as $stat)
             <div class="py-5 px-6 text-center">
@@ -238,8 +245,17 @@
 
         <div class="grid grid-cols-2 md:grid-cols-3 gap-5">
             @foreach($jurusans as $j)
+            @php
+                $iconJ = '🏫';
+                foreach($jurusanIkon as $keyword => $icon) {
+                    if(str_contains(strtolower($j->nama_jurusan), strtolower($keyword))) {
+                        $iconJ = $icon;
+                        break;
+                    }
+                }
+            @endphp
             <div class="jurusan-card shadow-sm fade-in p-5">
-                <div class="jurusan-icon bg-blue-100 text-blue-600 mb-4">🏫</div>
+                <div class="jurusan-icon bg-blue-100 text-blue-600 mb-4">{{ $iconJ }}</div>
                 <h3 class="font-bold text-gray-900 text-sm md:text-base leading-tight mb-2">
                     {{ $j->nama_jurusan }}
                 </h3>

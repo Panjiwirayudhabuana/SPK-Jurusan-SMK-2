@@ -37,8 +37,8 @@
     <div class="max-w-7xl mx-auto px-4 py-3">
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
-                    <span class="text-blue-900 font-bold text-lg">S2J</span>
+                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md overflow-hidden flex-shrink-0 p-1.5">
+                    <img src="{{ asset('Assets/Logo_SMKN2Jember.png') }}" alt="Logo SMKN 2 Jember" class="w-full h-full object-contain">
                 </div>
                 <div>
                     <div class="font-bold text-sm sm:text-base leading-tight">SMK NEGERI 2 JEMBER</div>
@@ -101,8 +101,8 @@
                 @endauth
             </nav>
 
-            {{-- HAMBURGER --}}
-            <button id="hamburger" class="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors" onclick="toggleMenu()">
+           {{-- HAMBURGER --}}
+            <button id="hamburger" class="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                 </svg>
@@ -153,8 +153,17 @@
 </header>
 
 <script>
-    function toggleMenu() {
-        const menu = document.getElementById('mobile-menu');
-        menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const hamburger = document.getElementById('hamburger');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        hamburger.addEventListener('click', function () {
+            // cek display saat ini
+            if (mobileMenu.style.display === 'none' || mobileMenu.style.display === '') {
+                mobileMenu.style.display = 'block';
+            } else {
+                mobileMenu.style.display = 'none';
+            }
+        });
+    });
 </script>

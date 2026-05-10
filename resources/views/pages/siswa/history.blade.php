@@ -68,7 +68,7 @@
     }
     tbody tr { border-bottom: 1px solid var(--border); transition: background .2s; }
     tbody tr:hover { background: rgba(244,185,66,.04); }
-    tbody td { padding: 16px 20px; font-size: 13px; color: var(--text); vertical-align: middle; }
+    tbody td { padding: 16px 20px; font-size: 13px; color: var(--text); vertical-align: middle; white-space: nowrap; }
 
     .badge-jurusan {
         display: inline-flex; align-items: center; gap: 6px;
@@ -151,7 +151,7 @@
     <div class="history-container">
 
         {{-- Tombol kembali --}}
-        <a href="{{ route('landingpage') }}" class="btn-back">← Kembali ke Dashboard</a>
+        <a href="{{ route('landing.home') }}" class="btn-back">🏠 Kembali ke Beranda</a>
 
         {{-- Header --}}
         <div class="page-header">
@@ -180,6 +180,7 @@
                                 <th>#</th>
                                 <th>Tanggal Tes</th>
                                 <th>Rekomendasi Jurusan</th>
+                                <th>Penyakit</th>
                                 <th>Nilai Tertinggi</th>
                                 <th>Peringkat 1</th>
                                 <th>Aksi</th>
@@ -212,6 +213,8 @@
                                             <span style="color:var(--text-dim)">-</span>
                                         @endif
                                     </td>
+
+                                    <td>{{ $tes->penyakit?->nama_penyakit ?? 'Tidak ada' }}</td>
 
                                     <td>{{ $top ? number_format($top->nilai_preferensi, 4) : '-' }}</td>
                                     <td>{{ $top ? '#'.$top->peringkat : '-' }}</td>

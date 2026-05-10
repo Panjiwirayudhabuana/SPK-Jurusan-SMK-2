@@ -27,4 +27,9 @@ class Siswa extends Model
     {
         return $this->hasMany(Tes::class, 'siswa_id'); // siswa_id di tes -> siswa.id
     }
+
+    public function tesTerakhir()
+    {
+        return $this->hasOne(Tes::class, 'siswa_id')->latestOfMany();
+    }
 }

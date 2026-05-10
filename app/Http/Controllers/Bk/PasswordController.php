@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Bk;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -45,6 +46,8 @@ class PasswordController extends Controller
             'password_hash' => Hash::make($request->password),
             'must_change_password' => false,
         ]);
+
+        ActivityLogger::log('Guru BK ubah password');
 
         // Cek lagi apakah profil Guru BK masih belum lengkap
         if ($user->isGuruBkProfileIncomplete()) {

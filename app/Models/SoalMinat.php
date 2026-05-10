@@ -10,6 +10,9 @@ class SoalMinat extends Model
 
     protected $fillable = ['pertanyaan', 'is_active'];
 
+protected $casts = [
+    'is_active' => 'boolean',
+    ];
     public function jawaban()
     {
         return $this->hasMany(JawabanMinat::class);

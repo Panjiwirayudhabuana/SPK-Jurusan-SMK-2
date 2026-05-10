@@ -18,9 +18,12 @@ class DashboardController extends Controller
         $recentSiswa  = Siswa::with('user')->latest()->take(5)->get();
         $jurusans = Jurusan::orderBy('nama_jurusan')->get();
        
-        $recentLogs = DB::table('activity_log')
-                         ->orderByDesc('created_at')->take(8)->get();
-
+$recentLogs = DB::table('activity_log')
+                ->join('users', 'users.id', '=', 'activity_log.user_id')
+                ->select('activity_log.*', 'users.nama as user_nama')
+                ->orderByDesc('activity_log.created_at')
+                ->take(8)->get();
+                
         return view('pages.admin.dashboard', compact(
             'totalSiswa', 'totalGuruBk', 'totalJurusan', 'totalTes',
             'recentGuruBk', 'recentSiswa', 'jurusans', 'recentLogs'

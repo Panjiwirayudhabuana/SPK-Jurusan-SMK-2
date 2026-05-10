@@ -279,7 +279,9 @@ body {
 {{-- NAVBAR --}}
 <nav class="navbar">
     <a href="{{ route('landing.home') }}" class="nav-brand">
-        <div class="nav-logo">S2J</div>
+        <div class="nav-logo" style="background:#fff; padding:4px;">
+            <img src="{{ asset('Assets/Logo_SMKN2Jember.png') }}" alt="Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
         <div>
             <div class="nav-name">SMK NEGERI 2 JEMBER</div>
             <div class="nav-sub">Sistem Pendukung Keputusan Pemilihan Jurusan</div>

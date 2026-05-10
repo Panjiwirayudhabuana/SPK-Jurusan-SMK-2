@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Bk;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -62,6 +63,8 @@ class ProfilController extends Controller
 
         $user->refresh();
         $user->loadMissing(['role', 'guruBk']);
+
+        ActivityLogger::log('Guru BK edit profil: ' . $user->nama);
 
         if ($user->must_change_password) {
             return redirect()

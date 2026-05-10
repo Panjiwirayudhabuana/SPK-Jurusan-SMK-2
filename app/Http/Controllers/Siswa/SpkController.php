@@ -11,6 +11,8 @@ use App\Models\Jurusan;
 use App\Models\HasilSaw;
 use App\Models\Upload;
 use App\Models\TesPdf;
+use App\Models\Penyakit;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +42,7 @@ class SpkController extends Controller
             session()->flash('info', 'Belum ada soal minat aktif. Hubungi admin untuk melengkapi data soal.');
         }
 
-        $tesTerakhir = Tes::where('siswa_id', $siswa->id)->latest()->first();
+        $tesTerakhir = Tes::with('penyakit')->where('siswa_id', $siswa->id)->latest()->first();
 
         $riwayatHasil = $tesTerakhir
             ? HasilSaw::where('tes_id', $tesTerakhir->id)->orderBy('peringkat')->get()
@@ -49,13 +51,17 @@ class SpkController extends Controller
         $jurusan = Jurusan::where('is_active', true)
             ->orderBy('nama_jurusan')
             ->get();
+        $penyakits = Penyakit::where('is_active', true)
+            ->orderBy('nama_penyakit')
+            ->get();
 
         return view('pages.siswa.tes', compact(
             'siswa',
             'soal',
             'tesTerakhir',
             'riwayatHasil',
-            'jurusan'
+            'jurusan',
+            'penyakits'
         ));
     }
 
@@ -89,6 +95,7 @@ class SpkController extends Controller
             'tinggi_badan'  => 'required|numeric|min:100|max:220',
             'berat_badan'   => 'required|numeric|min:20|max:200',
             'buta_warna'    => 'required|in:ya,tidak',
+            'penyakit_id'    => 'nullable|exists:penyakit,id',
 
             'nilai_matematika'       => 'required|numeric|min:0|max:100',
             'nilai_bahasa_indonesia' => 'required|numeric|min:0|max:100',
@@ -128,6 +135,7 @@ class SpkController extends Controller
                 'tinggi_badan'           => $validated['tinggi_badan'],
                 'berat_badan'            => $validated['berat_badan'],
                 'buta_warna'             => ($validated['buta_warna'] === 'ya'),
+                'penyakit_id'             => $validated['penyakit_id'] ?? null,
 
                 'minat_jurusan_1_id'     => $validated['jurusan_pilihan_1'],
                 'minat_jurusan_2_id'     => $validated['jurusan_pilihan_2'],
@@ -152,37 +160,64 @@ class SpkController extends Controller
             }
         });
 
+        ActivityLogger::log("Siswa cek minat bakat: skor {$skorMinatBakat}");
+
         return redirect()->route('siswa.tes.hasil');
     }
 
     /**
      * Proses SAW:
      * - Alternatif = jurusan
-     * - Kriteria = 7 kriteria final
+     * - Kriteria = 8 kriteria final
      * - Aturan wajib_lolos diperlakukan sebagai aturan bisnis tambahan
      */
     private function prosesSaw(Tes $tes): void
     {
-        $jurusans = Jurusan::with(['jurusanKriteria.kriteria'])
+        $jurusans = Jurusan::with(['jurusanKriteria.kriteria', 'penyakit'])
             ->where('is_active', true)
             ->get();
 
         // ambil nilai siswa (0–1)
-        $nilai = $this->getNilaiKriteriaSiswa($tes);
+        $nilaiDasar = $this->getNilaiKriteriaSiswa($tes);
 
         $rows = [];
 
         foreach ($jurusans as $jurusan) {
 
+            // 🔵 mapping kriteria biar rapi
+            $map = $this->mapJurusanKriteriaByKode($jurusan);
+            $nilai = $nilaiDasar;
+            $nilai['C8'] = $this->getSkorPenyakitUntukJurusan($tes, $jurusan);
+
+            // 🔴 1. WAJIB LOLOS (HARD CONSTRAINT)
+            if ($this->isJurusanDiskualifikasi($map, $nilai)) {
+                $rows[] = [
+                    'jurusan_id' => $jurusan->id,
+                    'nilai_preferensi' => 0,
+                ];
+                continue;
+            }
+
             $nilaiPreferensi = 0;
 
-            foreach ($jurusan->jurusanKriteria as $jk) {
-                $kode = $jk->kriteria->kode_kriteria ?? null;
+            // 🔵 2. LOOP KRITERIA
+            foreach ($map as $kode => $jk) {
 
-                if (!$kode || !isset($nilai[$kode])) continue;
+                if (!isset($nilai[$kode])) continue;
 
+                $nilaiSiswa = $nilai[$kode];
                 $bobot = (float) $jk->bobot;
-                $nilaiPreferensi += $bobot * $nilai[$kode];
+
+                // 🟡 3. PENYESUAIAN MIN & MAX
+                $nilaiFix = $this->hitungNilaiKecocokan(
+                    $nilaiSiswa,
+                    $jk->nilai_min,
+                    $jk->nilai_max,
+                    $kode
+                );
+
+                // 🟢 4. RUMUS SAW (TETAP)
+                $nilaiPreferensi += $bobot * $nilaiFix;
             }
 
             $rows[] = [
@@ -191,9 +226,10 @@ class SpkController extends Controller
             ];
         }
 
-        // ranking
+        // 🔽 SORTING
         usort($rows, fn($a, $b) => $b['nilai_preferensi'] <=> $a['nilai_preferensi']);
 
+        // 🔄 SIMPAN ULANG
         HasilSaw::where('tes_id', $tes->id)->delete();
 
         foreach ($rows as $i => $row) {
@@ -207,15 +243,7 @@ class SpkController extends Controller
     }
 
     /**
-     * Nilai final 7 kriteria siswa
-     *
-     * C1 = Matematika
-     * C2 = Bahasa Indonesia
-     * C3 = IPA
-     * C4 = Bahasa Inggris
-     * C5 = Fisik (kategori BMI)
-     * C6 = Buta Warna (1/0)
-     * C7 = Minat Bakat
+     * Nilai final 8 kriteria siswa (Normalisasi 0-1)
      */
     private function getNilaiKriteriaSiswa(Tes $tes): array
     {
@@ -230,24 +258,27 @@ class SpkController extends Controller
         ];
     }
 
+    private function getSkorPenyakitUntukJurusan(Tes $tes, Jurusan $jurusan): int
+    {
+        if (!$tes->penyakit_id) {
+            return 1;
+        }
+
+        return $jurusan->penyakit->contains('id', $tes->penyakit_id) ? 0 : 1;
+    }
+
     /**
      * Hitung BMI siswa
      */
     private function hitungBmi(float $tinggiBadan, float $beratBadan): float
     {
         $tinggiMeter = $tinggiBadan / 100;
-
-        if ($tinggiMeter <= 0) {
-            return 0;
-        }
-
+        if ($tinggiMeter <= 0) return 0;
         return round($beratBadan / ($tinggiMeter * $tinggiMeter), 2);
     }
 
     /**
      * Konversi BMI menjadi skor fisik
-     * Anda dapat mengubah mapping kategori ini bila diperlukan,
-     * namun saat ini dibuat sederhana dan stabil untuk 1 kriteria fisik.
      */
     private function getSkorFisikDariBmi(float $tinggiBadan, float $beratBadan): int
     {
@@ -270,90 +301,40 @@ class SpkController extends Controller
     private function mapJurusanKriteriaByKode($jurusan): array
     {
         $map = [];
-
         foreach ($jurusan->jurusanKriteria as $jurusanKriteria) {
             $kode = $jurusanKriteria->kriteria?->kode_kriteria;
-
             if ($kode) {
                 $map[$kode] = $jurusanKriteria;
             }
         }
-
         return $map;
     }
 
     /**
      * Hitung nilai kecocokan siswa terhadap aturan jurusan
-     * Digunakan untuk membentuk matriks keputusan per jurusan.
      */
-    private function hitungNilaiKecocokan(float $nilaiSiswa, $nilaiMin = null, $nilaiMax = null): float
+    private function hitungNilaiKecocokan(float $nilaiSiswa, $nilaiMin = null, $nilaiMax = null, $kodeKriteria = null): float
     {
+        // Khusus C6 & C8 adalah biner (0/1), kriteria lain 0-100 di database
+        $isBinary = in_array($kodeKriteria, ['C6', 'C8']);
+        $divider  = $isBinary ? 1 : 100;
+
+        $nilaiMin = is_null($nilaiMin) ? null : $nilaiMin / $divider;
+        $nilaiMax = is_null($nilaiMax) ? null : $nilaiMax / $divider;
+
         $score = $nilaiSiswa;
 
+        // 🔻 Jika di bawah minimum → penalti
         if (!is_null($nilaiMin) && $nilaiMin > 0 && $nilaiSiswa < $nilaiMin) {
             $score = ($nilaiSiswa / $nilaiMin) * $nilaiSiswa;
         }
 
+        // 🔺 Jika di atas maksimum → penalti
         if (!is_null($nilaiMax) && $nilaiSiswa > 0 && $nilaiSiswa > $nilaiMax) {
             $score = ($nilaiMax / $nilaiSiswa) * $score;
         }
 
         return round(max($score, 0), 6);
-    }
-
-    /**
-     * Normalisasi benefit: rij = xij / max(xj)
-     */
-    private function normalisasiBenefitMatrix(array $matrix, array $kodeKriteria): array
-    {
-        $maxPerKriteria = [];
-
-        foreach ($kodeKriteria as $kode) {
-            $maxValue = 0;
-
-            foreach ($matrix as $jurusanId => $row) {
-                $nilai = $row[$kode] ?? 0;
-                if ($nilai > $maxValue) {
-                    $maxValue = $nilai;
-                }
-            }
-
-            $maxPerKriteria[$kode] = $maxValue;
-        }
-
-        $normalized = [];
-
-        foreach ($matrix as $jurusanId => $row) {
-            foreach ($kodeKriteria as $kode) {
-                $pembagi = $maxPerKriteria[$kode] ?? 0;
-                $normalized[$jurusanId][$kode] = $pembagi > 0
-                    ? round(($row[$kode] ?? 0) / $pembagi, 6)
-                    : 0;
-            }
-        }
-
-        return $normalized;
-    }
-
-    /**
-     * Normalisasi bobot per jurusan agar total = 1
-     */
-    private function normalisasiBobot(array $bobotMap): array
-    {
-        $total = array_sum($bobotMap);
-
-        if ($total <= 0) {
-            foreach ($bobotMap as $kode => $value) {
-                $bobotMap[$kode] = 0;
-            }
-            return $bobotMap;
-        }
-
-        foreach ($bobotMap as $kode => $value) {
-            $bobotMap[$kode] = round($value / $total, 6);
-        }
-
-        return $bobotMap;
     }
 
     /**
@@ -368,18 +349,17 @@ class SpkController extends Controller
             }
 
             $nilai = $nilaiSiswa[$kode] ?? null;
+            if (is_null($nilai)) continue;
 
-            if (is_null($nilai)) {
-                continue;
-            }
+            // C6 & C8 biner (0/1), sisanya 0-100 di database
+            $isBinary = in_array($kode, ['C6', 'C8']);
+            $divider  = $isBinary ? 1 : 100;
 
-            if (!is_null($jurusanKriteria->nilai_min) && $nilai < $jurusanKriteria->nilai_min) {
-                return true;
-            }
+            $nilaiMin = is_null($jurusanKriteria->nilai_min) ? null : $jurusanKriteria->nilai_min / $divider;
+            $nilaiMax = is_null($jurusanKriteria->nilai_max) ? null : $jurusanKriteria->nilai_max / $divider;
 
-            if (!is_null($jurusanKriteria->nilai_max) && $nilai > $jurusanKriteria->nilai_max) {
-                return true;
-            }
+            if (!is_null($nilaiMin) && $nilai < $nilaiMin) return true;
+            if (!is_null($nilaiMax) && $nilai > $nilaiMax) return true;
         }
 
         return false;
@@ -440,58 +420,37 @@ class SpkController extends Controller
     public function cetakPdf()
     {
         $user = Auth::user();
-
         $siswa = Siswa::where('user_id', $user->id)->first();
-        if (!$siswa) {
-            abort(403);
-        }
+        if (!$siswa) abort(403);
 
-        $tes = Tes::where('siswa_id', $siswa->id)->latest()->first();
-        if (!$tes) {
-            abort(404);
-        }
+        $tes = Tes::with('penyakit')->where('siswa_id', $siswa->id)->latest()->first();
+        if (!$tes) abort(404);
 
         $tesPdf = TesPdf::with('upload')->where('tes_id', $tes->id)->first();
 
         if (!$tesPdf || !$tesPdf->upload) {
             $ok = $this->generateAndStorePdf($tes);
-
             if (!$ok) {
-                return redirect()
-                    ->route('siswa.tes.hasil')
-                    ->withErrors('Gagal membuat PDF. Cek konfigurasi Chrome/Puppeteer pada laptop ini (lihat log).');
+                return redirect()->route('siswa.tes.hasil')->withErrors('Gagal membuat PDF.');
             }
-
             $tesPdf = TesPdf::with('upload')->where('tes_id', $tes->id)->first();
         }
 
-        if (!$tesPdf || !$tesPdf->upload) {
-            return redirect()
-                ->route('siswa.tes.hasil')
-                ->withErrors('PDF belum tersedia. Silakan coba lagi.');
-        }
-
         $filePath = storage_path('app/public/' . $tesPdf->upload->storage_path);
-
         if (!file_exists($filePath)) {
-            return redirect()
-                ->route('siswa.tes.hasil')
-                ->withErrors('File PDF tidak ditemukan di server: ' . $tesPdf->upload->storage_path);
+            return redirect()->route('siswa.tes.hasil')->withErrors('File PDF tidak ditemukan.');
         }
 
         return response()->download($filePath, 'hasil_tes_' . $tes->id . '.pdf');
     }
 
     /**
-     * Generate PDF hasil tes dan simpan relasinya
+     * Generate PDF hasil tes
      */
     private function generateAndStorePdf(Tes $tes): bool
     {
-        $hasilList = HasilSaw::where('tes_id', $tes->id)
-            ->with('jurusan')
-            ->orderBy('peringkat')
-            ->get();
-
+        $tes->loadMissing('penyakit');
+        $hasilList = HasilSaw::where('tes_id', $tes->id)->with('jurusan')->orderBy('peringkat')->get();
         $siswa = $tes->siswa()->with('user')->first();
 
         $html = view('pages.siswa.hasil-pdf', [
@@ -505,9 +464,7 @@ class SpkController extends Controller
         $absolutePath = storage_path('app/public/' . $relativePath);
 
         $dir = dirname($absolutePath);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
 
         $chromePath = config('browsershot.chrome_path');
 
@@ -521,50 +478,24 @@ class SpkController extends Controller
 
             if ($chromePath && file_exists($chromePath)) {
                 $browsershot->setChromePath($chromePath);
-            } else {
-                Log::warning('BROWSERSHOT_CHROME_PATH tidak valid / tidak ditemukan', [
-                    'chromePath' => $chromePath,
-                ]);
             }
 
             $browsershot->save($absolutePath);
-
-            if (!file_exists($absolutePath) || filesize($absolutePath) === 0) {
-                Log::error('PDF tidak terbentuk / 0 byte', ['path' => $absolutePath]);
-                return false;
-            }
         } catch (\Throwable $e) {
-            if (file_exists($absolutePath)) {
-                @unlink($absolutePath);
-            }
-
-            Log::error('Browsershot gagal generate PDF', [
-                'chromePath' => $chromePath,
-                'message'    => $e->getMessage(),
-            ]);
-
+            Log::error('Browsershot gagal generate PDF', ['message' => $e->getMessage()]);
             return false;
         }
-
-        $sizeBytes = filesize($absolutePath) ?: 0;
-        $sizeMb = round($sizeBytes / 1024 / 1024, 2);
 
         $upload = Upload::create([
             'uploader_user_id' => $siswa->user_id,
             'file_name'        => $fileName,
             'ext'              => 'PDF',
             'mime_type'        => 'application/pdf',
-            'size_mb'          => $sizeMb,
+            'size_mb'          => round(filesize($absolutePath) / 1024 / 1024, 2),
             'storage_path'     => $relativePath,
         ]);
 
-        TesPdf::updateOrCreate(
-            ['tes_id' => $tes->id],
-            [
-                'upload_id'    => $upload->id,
-                'generated_at' => now(),
-            ]
-        );
+        TesPdf::updateOrCreate(['tes_id' => $tes->id], ['upload_id' => $upload->id, 'generated_at' => now()]);
 
         return true;
     }
@@ -575,97 +506,44 @@ class SpkController extends Controller
     public function history()
     {
         $siswa = Siswa::where('user_id', Auth::id())->first();
-
-        if (!$siswa) {
-            return view('pages.siswa.history', ['histories' => collect()]);
-        }
+        if (!$siswa) return view('pages.siswa.history', ['histories' => collect()]);
 
         $histories = Tes::where('siswa_id', $siswa->id)
-            ->with(['hasilSaw.jurusan', 'tesPDF.upload'])
+            ->with(['hasilSaw.jurusan', 'tesPDF.upload', 'penyakit'])
             ->latest()
             ->paginate(10);
 
         return view('pages.siswa.history', compact('histories'));
     }
 
-    /**
-     * Detail hasil berdasarkan tes tertentu
-     */
     public function hasilByTes(Tes $tes)
     {
         $user  = Auth::user();
-        $siswa = Siswa::with('user')->where('user_id', $user->id)->first();
+        $siswa = Siswa::where('user_id', $user->id)->first();
+        if (!$siswa || $tes->siswa_id !== $siswa->id) abort(403);
 
-        if (!$siswa) {
-            abort(403);
-        }
+        $tes->loadMissing('penyakit');
+        $hasilList = HasilSaw::where('tes_id', $tes->id)->with('jurusan')->orderBy('peringkat')->get();
 
-        if ($tes->siswa_id !== $siswa->id) {
-            abort(403);
-        }
-
-        $hasilList = HasilSaw::where('tes_id', $tes->id)
-            ->with('jurusan')
-            ->orderBy('peringkat')
-            ->get();
-
-        if ($hasilList->isEmpty()) {
-            return redirect()->route('siswa.tes.index')
-                ->withErrors('Hasil tes ini belum tersedia.');
-        }
+        if ($hasilList->isEmpty()) return redirect()->route('siswa.tes.index');
 
         $jurusanPilihan1 = Jurusan::find($tes->minat_jurusan_1_id);
         $jurusanPilihan2 = Jurusan::find($tes->minat_jurusan_2_id);
+        $skorPilihan1 = $hasilList->firstWhere('jurusan_id', $tes->minat_jurusan_1_id);
+        $skorPilihan2 = $hasilList->firstWhere('jurusan_id', $tes->minat_jurusan_2_id);
 
-        $skorPilihan1 = $tes->minat_jurusan_1_id
-            ? $hasilList->firstWhere('jurusan_id', $tes->minat_jurusan_1_id)
-            : null;
-
-        $skorPilihan2 = $tes->minat_jurusan_2_id
-            ? $hasilList->firstWhere('jurusan_id', $tes->minat_jurusan_2_id)
-            : null;
-
-        return view('pages.siswa.hasil', [
-            'siswa'            => $siswa,
-            'tesTerakhir'      => $tes,
-            'hasilList'        => $hasilList,
-            'jurusanPilihan1'  => $jurusanPilihan1,
-            'jurusanPilihan2'  => $jurusanPilihan2,
-            'skorPilihan1'     => $skorPilihan1,
-            'skorPilihan2'     => $skorPilihan2,
-        ]);
+        return view('pages.siswa.hasil', compact('siswa', 'tes', 'hasilList', 'jurusanPilihan1', 'jurusanPilihan2', 'skorPilihan1', 'skorPilihan2'))->with('tesTerakhir', $tes);
     }
 
-    /**
-     * Download PDF berdasarkan tes tertentu
-     */
     public function cetakPdfByTes(Tes $tes)
     {
-        $user  = Auth::user();
-        $siswa = Siswa::where('user_id', $user->id)->first();
+        $siswa = Siswa::where('user_id', Auth::id())->first();
+        if (!$siswa || $tes->siswa_id !== $siswa->id) abort(403);
 
-        if (!$siswa) {
-            abort(403);
-        }
-
-        if ($tes->siswa_id !== $siswa->id) {
-            abort(403);
-        }
-
-        $tesPdf = TesPdf::with('upload')
-            ->where('tes_id', $tes->id)
-            ->first();
-
-        if (!$tesPdf || !$tesPdf->upload) {
-            return back()->withErrors('File PDF untuk tes ini belum tersedia.');
-        }
+        $tesPdf = TesPdf::with('upload')->where('tes_id', $tes->id)->first();
+        if (!$tesPdf || !$tesPdf->upload) return back()->withErrors('File PDF tidak tersedia.');
 
         $filePath = storage_path('app/public/' . $tesPdf->upload->storage_path);
-
-        if (!file_exists($filePath)) {
-            return back()->withErrors('File PDF tidak ditemukan di server.');
-        }
-
         return response()->download($filePath, 'hasil_tes_' . $tes->id . '.pdf');
     }
 }

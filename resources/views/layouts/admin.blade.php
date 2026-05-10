@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="csrf-token" content="{{ csrf_token() }}"/>
     <title>@yield('title', 'Admin Panel') — SPK SAW</title>
+    <link rel="icon" href="{{ asset('Assets/Logo_SMKN2Jember.png') }}" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Merriweather:wght@400;700&display=swap" rel="stylesheet"/>
     <style>
         :root {
@@ -68,6 +69,7 @@
             color: var(--text-dark);
             display: flex;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* ── SIDEBAR ── */
@@ -83,6 +85,7 @@
             flex-direction: column;
             z-index: 200;
             box-shadow: 4px 0 24px rgba(26, 60, 110, 0.15);
+            transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .sb-brand {
@@ -95,19 +98,16 @@
         }
 
         .sb-logo {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Poppins', sans-serif;
-            font-size: 11px;
-            font-weight: 800;
-            color: #fff;
+            padding: 4px;
             flex-shrink: 0;
-            box-shadow: 0 3px 10px rgba(232,160,32,.3);
+            box-shadow: 0 3px 10px rgba(0,0,0,.1);
         }
 
         .sb-name {
@@ -230,6 +230,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            min-width: 0;
         }
 
         /* ── TOPBAR ── */
@@ -245,12 +246,15 @@
             top: 0;
             z-index: 100;
             box-shadow: 0 4px 16px rgba(26, 60, 110, 0.05);
+            gap: 10px;
         }
 
         .tb-left {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex: 1;
+            min-width: 0;
         }
 
         .tb-badge {
@@ -265,18 +269,23 @@
             text-transform: uppercase;
             padding: 4px 10px;
             border-radius: 999px;
+            flex-shrink: 0;
         }
 
         .tb-page {
             font-size: 13px;
             font-weight: 700;
             color: var(--text-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .tb-right {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .tb-bell {
@@ -335,6 +344,7 @@
             font-size: 13px;
             color: #fff;
             box-shadow: 0 3px 10px rgba(232,160,32,.22);
+            flex-shrink: 0;
         }
 
         .tb-uname {
@@ -446,6 +456,17 @@
 
         .table-custom tbody tr:hover td {
             background: #f8fbff;
+        }
+
+        .res-table {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .table-custom th {
+            white-space: nowrap;
         }
 
         /* Badges */
@@ -702,15 +723,137 @@
             background: rgba(26, 60, 110, .16);
             border-radius: 10px;
         }
+
+        /* ── HAMBURGER & MOBILE SIDEBAR ── */
+        #adminToggleSidebar {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            font-size: 18px;
+            background: #f8fbff;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--primary-dark);
+            flex-shrink: 0;
+            transition: all var(--transition-fast);
+        }
+
+        #adminToggleSidebar:hover {
+            background: var(--surface);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(26, 60, 110, 0.08);
+        }
+
+        #sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 37, 72, 0.5);
+            backdrop-filter: blur(2px);
+            z-index: 150;
+            opacity: 0;
+            transition: opacity .3s ease;
+        }
+
+        #sidebar-overlay.show {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Responsive Utilities */
+        .res-table {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        @media (max-width: 900px) {
+            :root {
+                --sw: 260px;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 300;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-wrapper {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            #adminToggleSidebar {
+                display: inline-flex;
+            }
+
+            .topbar {
+                padding: 0 16px;
+            }
+
+            .tb-uname,
+            .tb-urole,
+            .tb-divider,
+            .tb-bell {
+                display: none;
+            }
+
+            .tb-left {
+                gap: 12px;
+            }
+
+            .tb-page {
+                font-size: 12px;
+            }
+
+            .page-content {
+                padding: 16px 14px 40px;
+            }
+
+            .page-title {
+                font-size: 18px;
+            }
+
+            .card-header-custom {
+                padding: 12px 16px;
+            }
+
+            .form-card-custom {
+                padding: 20px 16px;
+            }
+            
+            .form-actions-custom {
+                flex-direction: column-reverse;
+            }
+            
+            .form-actions-custom .btn-custom {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
     @stack('styles')
 </head>
 <body>
 
+<!-- Overlay untuk menutup sidebar saat klik di luar -->
+<div id="sidebar-overlay"></div>
+
 <!-- ════════════════ SIDEBAR ════════════════ -->
 <aside class="sidebar">
     <div class="sb-brand">
-        <div class="sb-logo">SPK</div>
+        <div class="sb-logo">
+            <img src="{{ asset('Assets/Logo_SMKN2Jember.png') }}" alt="Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
         <div>
             <div class="sb-name">SPK SAW</div>
             <div class="sb-sub">Admin Panel</div>
@@ -738,16 +881,14 @@
             <span class="sb-icon">👨‍🎓</span> Akun Siswa
         </a>
 
-        {{-- <div class="sb-sec">Kelola Status</div>
-        <a href="{{ route('admin.status.index') }}"
-           class="sb-link {{ request()->routeIs('admin.status.*') ? 'active' : '' }}">
-            <span class="sb-icon">🔘</span> Status Akun
-        </a> --}}
-
         <div class="sb-sec">Kelola Jurusan</div>
         <a href="{{ route('admin.jurusan.index') }}"
            class="sb-link {{ request()->routeIs('admin.jurusan.*') ? 'active' : '' }}">
             <span class="sb-icon">🏫</span> Data & Status Jurusan
+        </a>
+        <a href="{{ route('admin.penyakit.index') }}"
+           class="sb-link {{ request()->routeIs('admin.penyakit.*') ? 'active' : '' }}">
+            <span class="sb-icon">⚕</span> Data Penyakit
         </a>
 
         <div class="sb-sec">Monitoring</div>
@@ -781,6 +922,7 @@
     <!-- TOPBAR -->
     <header class="topbar">
         <div class="tb-left">
+            <button id="adminToggleSidebar" aria-label="Toggle Sidebar">☰</button>
             <div class="tb-badge">⚙️ Admin</div>
             <div class="tb-page">@yield('title', 'Dashboard')</div>
         </div>
@@ -802,6 +944,31 @@
     </main>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebar = document.querySelector('.sidebar');
+    const btn     = document.getElementById('adminToggleSidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    btn.addEventListener('click', function () {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('show');
+    });
+
+    overlay.addEventListener('click', function () {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+    });
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 900) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+        }
+    });
+});
+</script>
 
 @stack('scripts')
 </body>

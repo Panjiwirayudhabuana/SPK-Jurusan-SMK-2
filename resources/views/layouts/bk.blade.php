@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>@yield('title','Dashboard') — BK SMK Negeri 2 Jember</title>
+<link rel="icon" href="{{ asset('Assets/Logo_SMKN2Jember.png') }}" type="image/png">
 @vite(['resources/css/app.css','resources/js/app.js'])
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Merriweather:wght@400;700&display=swap" rel="stylesheet"/>
 @stack('styles')
@@ -68,6 +69,7 @@ body{
     color:var(--text);
     font-family:'Poppins',sans-serif;
     min-height:100vh;
+    overflow-x: hidden;
 }
 
 /* SIDEBAR */
@@ -78,10 +80,11 @@ body{
     bottom:0;
     width:var(--sidebar-w);
     background:var(--primary-dark);
-    z-index:100;
+    z-index:200;
     display:flex;
     flex-direction:column;
     box-shadow:4px 0 24px rgba(26, 60, 110, 0.15);
+    transition: transform .3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sb-brand{
@@ -95,17 +98,14 @@ body{
 .sb-logo{
     width:38px;
     height:38px;
-    border-radius:10px;
-    background:linear-gradient(135deg,var(--accent),var(--accent-light));
+    border-radius:50%;
+    background:#ffffff;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-family:'Poppins',sans-serif;
-    font-size:13px;
-    font-weight:800;
-    color:#fff;
+    padding:4px;
     flex-shrink:0;
-    box-shadow:0 3px 10px rgba(232,160,32,.3);
+    box-shadow:0 3px 10px rgba(0,0,0,.1);
 }
 
 .sb-name{
@@ -237,6 +237,7 @@ body{
     min-height:100vh;
     display:flex;
     flex-direction:column;
+    min-width: 0;
 }
 
 /* TOPBAR */
@@ -250,7 +251,7 @@ body{
     padding:0 28px;
     position:sticky;
     top:0;
-    z-index:50;
+    z-index:100;
     box-shadow:0 4px 16px rgba(26, 60, 110, 0.05);
 }
 
@@ -281,6 +282,91 @@ body{
 .bk-content{
     flex:1;
     padding:24px 28px 40px;
+}
+
+/* RESPONSIVE UTILITIES */
+.res-table {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+/* HAMBURGER */
+#autoToggleSidebar{
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    width:38px;
+    height:38px;
+    font-size:18px;
+    background:#f8fbff;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    cursor:pointer;
+    color:var(--primary-dark);
+    transition:all var(--transition-fast);
+}
+
+#autoToggleSidebar:hover{
+    background:var(--surface);
+    border-color:var(--primary);
+}
+
+#sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 37, 72, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 150;
+    opacity: 0;
+    transition: opacity .3s ease;
+}
+
+#sidebar-overlay.show {
+    display: block;
+    opacity: 1;
+}
+
+@media(max-width:900px){
+    .bk-sidebar{
+        transform:translateX(-100%);
+        width: 260px;
+    }
+
+    .bk-sidebar.open{
+        transform:translateX(0);
+    }
+
+    .bk-main{
+        margin-left:0;
+        width: 100%;
+    }
+
+    .bk-content{
+        padding:16px 14px 40px;
+    }
+
+    .bk-topbar{
+        padding: 0 16px;
+        gap: 12px;
+    }
+
+    #autoToggleSidebar{
+        display:inline-flex;
+    }
+
+    .tb-date {
+        display: none;
+    }
+
+    .tb-title {
+        font-size: 14px;
+    }
 }
 
 /* CARD */
@@ -467,6 +553,7 @@ th{
     letter-spacing:.06em;
     color:var(--text-dim);
     border-bottom:1px solid var(--border);
+    white-space: nowrap;
 }
 
 td{
@@ -474,6 +561,12 @@ td{
     font-size:12.5px;
     color:var(--text);
     border-bottom:1px solid var(--border);
+}
+
+.res-table{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
 }
 
 tr:last-child td{
@@ -547,37 +640,19 @@ textarea.form-control{
     border-top:1px solid var(--border);
     margin-top:20px;
 }
-
-/* RESPONSIVE */
-@media(max-width:900px){
-    .bk-sidebar{
-        transform:translateX(-100%);
-        transition:transform .3s;
-    }
-
-    .bk-sidebar.open{
-        transform:translateX(0);
-    }
-
-    .bk-main{
-        margin-left:0;
-    }
-
-    .bk-content{
-        padding:16px;
-    }
-
-    .form-row{
-        grid-template-columns:1fr;
-    }
-}
 </style>
 </head>
+
 <body>
+
+<!-- Overlay untuk menutup sidebar saat klik di luar -->
+<div id="sidebar-overlay"></div>
 
 <aside class="bk-sidebar" id="bk-sidebar">
     <div class="sb-brand">
-        <div class="sb-logo">BK</div>
+        <div class="sb-logo">
+            <img src="{{ asset('Assets/Logo_SMKN2Jember.png') }}" alt="Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
         <div>
             <div class="sb-name">SMK Negeri 2 Jember</div>
             <div class="sb-role">Panel Guru BK</div>
@@ -638,13 +713,16 @@ textarea.form-control{
 </aside>
 
 <div class="bk-main">
-    <div class="bk-topbar">
-        <div>
+   <div class="bk-topbar">
+    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+        <button id="autoToggleSidebar" aria-label="Toggle Sidebar">☰</button>
+        <div style="min-width:0;">
             <div class="tb-title">@yield('page-title','Dashboard')</div>
             <div class="tb-sub">@yield('page-sub','')</div>
         </div>
-        <div class="tb-date">{{ now()->translatedFormat('l, d F Y') }}</div>
     </div>
+    <div class="tb-date">{{ now()->translatedFormat('l, d F Y') }}</div>
+</div>
 
     <div class="bk-content">
         @if($errors->any())
@@ -663,6 +741,31 @@ textarea.form-control{
         @yield('content')
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebar = document.getElementById('bk-sidebar');
+    const btn = document.getElementById('autoToggleSidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    btn.addEventListener('click', function () {
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('show');
+    });
+
+    overlay.addEventListener('click', function () {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+    });
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 900) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+        }
+    });
+});
+</script>
 
 @stack('scripts')
 </body>
